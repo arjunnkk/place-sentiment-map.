@@ -1,0 +1,16 @@
+# secrets
+.env
+*.key
+*.pem
+
+# notebooks cache
+.ipynb_checkpoints/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# big/working data (we only commit final snapshots + handoff)
+data/checkpoints/
+data/processed/
+!data/processed/README.md
