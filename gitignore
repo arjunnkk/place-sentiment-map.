@@ -1,0 +1,7 @@
+.env
+.ipynb_checkpoints/
+data/checkpoints/
+data/processed/
+debug_html_no_tiles_*.html
+.DS_Store
+Thumbs.db
