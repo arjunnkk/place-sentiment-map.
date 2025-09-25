@@ -2,15 +2,18 @@ name: Update data (notebook)
 
 on:
   schedule:
-    # Runs daily at 14:00 UTC (~02:00–03:00 NZ time depending on DST)
     - cron: "0 14 * * *"
-  workflow_dispatch: {}   # lets you run it manually from the Actions tab
+  workflow_dispatch: {}
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # allow pushing updated CSV/JSON
+      contents: write
+    # Option A: expose secret to all steps in this job
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,19 +33,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install papermill jupyter pandas numpy python-dotenv openpyxl requests
 
-      - name: Configure secrets (used inside notebook)
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-        run: echo "Secrets available to the notebook via environment variables."
+      # (Optional) keep this, but not required anymore since we set job-level env
+      - name: Confirm secret is available
+        run: |
+          if [ -z "${GOOGLE_API_KEY}" ]; then echo "GOOGLE_API_KEY is NOT set" && exit 1; else echo "GOOGLE_API_KEY is set"; fi
 
       - name: Run notebook (Data collection)
+        # Option B (alternative): you could put env: { GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }} } here instead of at job level
         run: |
           papermill data/final/data_collection_final.ipynb data/final/etl-output-data-collection.ipynb
-
-      # If/when you want to run Shubham's notebook too, un-comment this:
-      # - name: Run sentiment/aspects notebook
-      #   run: |
-      #     papermill "sent files/sent.ipynb" "sent files/etl-output-sent.ipynb"
 
       - name: Commit updated data
         run: |
