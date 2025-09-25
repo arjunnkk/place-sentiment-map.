@@ -2,9 +2,9 @@ name: Update data (notebook)
 
 on:
   schedule:
-    # Runs daily at 14:00 UTC (~02:00 NZST / ~03:00 NZDT)
+    # Runs daily at 14:00 UTC (~02:00–03:00 NZ time depending on DST)
     - cron: "0 14 * * *"
-  workflow_dispatch: {}   # lets you run it manually
+  workflow_dispatch: {}   # lets you run it manually from the Actions tab
 
 jobs:
   run-notebook:
@@ -14,6 +14,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: List files (debug)
+        run: |
+          pwd
+          ls -R
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -32,12 +37,12 @@ jobs:
 
       - name: Run notebook (Data collection)
         run: |
-          papermill "Data collection- final.ipynb" "etl-output-data-collection.ipynb"
+          papermill "data/final/Data collection- final.ipynb" "data/final/etl-output-data-collection.ipynb"
 
       # If/when you want to run Shubham's notebook too, un-comment this:
       # - name: Run sentiment/aspects notebook
       #   run: |
-      #     papermill "sent files/sent.ipynb" "etl-output-sent.ipynb"
+      #     papermill "sent files/sent.ipynb" "sent files/etl-output-sent.ipynb"
 
       - name: Commit updated data
         run: |
