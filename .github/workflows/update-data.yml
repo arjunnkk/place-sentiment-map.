@@ -37,7 +37,7 @@ jobs:
 
       - name: Run notebook (Data collection)
         run: |
-          papermill "data/final/Data collection- final.ipynb" "data/final/etl-output-data-collection.ipynb"
+          papermill data/final/data_collection_final.ipynb data/final/etl-output-data-collection.ipynb
 
       # If/when you want to run Shubham's notebook too, un-comment this:
       # - name: Run sentiment/aspects notebook
