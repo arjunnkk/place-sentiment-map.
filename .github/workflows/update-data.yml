@@ -43,10 +43,14 @@ jobs:
         run: |
           papermill data/final/data_collection_final.ipynb data/final/etl-output-data-collection.ipynb
 
-      - name: Commit updated data
+      - name: Run sentiment/aspects notebook
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add data/final/* || true
-          git commit -m "auto: refresh data $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || echo "No changes to commit"
-          git push
+           papermill "data/sentiment/aspects.ipynb" "data/sentiment/etl-output-aspects.ipynb"
+
+      - name: Commit updated data (if changed)
+        run: |
+         git config user.name "github-actions"
+         git config user.email "actions@github.com"
+         git add data/final/* || true
+         git diff --cached --quiet && echo "No changes to commit" || git commit -m "auto: refresh data $(date -u +'%Y-%m-%dT%H:%M:%SZ')" 
+         git push || true
