@@ -45,6 +45,7 @@ jobs:
 
       - name: Run sentiment notebook
         run: |
+         cd data/final
          papermill -k python3 "data/final/Sent.ipynb" "data/sentiment/etl-output-sent.ipynb"
 
       - name: Run aspect notebook
