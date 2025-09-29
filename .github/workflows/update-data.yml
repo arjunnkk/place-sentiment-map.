@@ -55,6 +55,6 @@ jobs:
         run: |
          git config user.name "github-actions"
          git config user.email "actions@github.com"
-         git add data/final/* || true
+         git add data/final/* data/sentiment/* || true
          git diff --cached --quiet && echo "No changes to commit" || git commit -m "auto: refresh data $(date -u +'%Y-%m-%dT%H:%M:%SZ')" 
          git push || true
