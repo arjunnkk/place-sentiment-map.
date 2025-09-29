@@ -43,6 +43,10 @@ jobs:
         run: |
           papermill data/final/data_collection_final.ipynb data/final/etl-output-data-collection.ipynb
 
+      - name: Run sentiment notebook
+        run: |
+          papermill "data/sentiment/Sent.ipynb" "data/sentiment/etl-output-sent.ipynb"
+      
       - name: Run sentiment/aspects notebook
         run: |
            papermill "data/sentiment/aspects.ipynb" "data/sentiment/etl-output-aspects.ipynb"
