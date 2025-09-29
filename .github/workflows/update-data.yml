@@ -45,11 +45,11 @@ jobs:
 
       - name: Run sentiment notebook
         run: |
-          papermill "data/sentiment/Sent.ipynb" "data/sentiment/etl-output-sent.ipynb"
-      
-      - name: Run sentiment/aspects notebook
+         papermill -k python3 "data/sentiment/Sent.ipynb" "data/sentiment/etl-output-sent.ipynb"
+
+      - name: Run aspect notebook
         run: |
-           papermill "data/sentiment/aspects.ipynb" "data/sentiment/etl-output-aspects.ipynb"
+         papermill -k python3 "data/sentiment/aspects.ipynb" "data/sentiment/etl-output-aspects.ipynb"
 
       - name: Commit updated data (if changed)
         run: |
