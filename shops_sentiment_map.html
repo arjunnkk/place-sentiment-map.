@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Explainable Place Sentiment Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            max-width: 260px;
+            font-size: 14px;
+            transition: background 0.3s, color 0.3s;
+        }
+        #controls.dark { background: #2c2c2c; color: #f1f1f1; }
+        #controls label { display: block; margin-top: 6px; }
+        #controls input[type="text"], #controls input[type="number"], #controls select {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 4px;
+        }
+        #controls .btn-row { margin-top: 8px; display:flex; gap:8px; flex-wrap: wrap; }
+        #controls button {
+            padding: 6px 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        #controls button.apply { background: #007bff; color: white; }
+        #controls button.reset { background: #6c757d; color: white; }
+        #controls button.toggle-dark { background: #222; color: #fff; }
+        #controls button.export { background: #28a745; color: white; }
+        #controls button.share { background: #17a2b8; color: white; }
+
+        .legend {
+            background: white;
+            padding: 6px 8px;
+            font-size: 14px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        #sidebar {
+            position: absolute;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: #f9f9f9;
+            border-left: 1px solid #ddd;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            padding: 15px;
+            transition: right 0.3s ease-in-out;
+            z-index: 1100;
+        }
+        #sidebar.active { right: 0; }
+        #sidebar .close-btn {
+            float: right;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #888;
+        }
+        #sidebar .keywords span {
+            display: inline-block;
+            background: #e0e0e0;
+            border-radius: 12px;
+            padding: 3px 8px;
+            margin: 2px;
+            font-size: 12px;
+            color: #333;
+        }
+        /* autocomplete suggestions */
+        .autocomplete-suggestions {
+            border: 1px solid #ccc;
+            background: white;
+            position: absolute;
+            z-index: 2000;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 240px;
+        }
+        .autocomplete-suggestion {
+            padding: 6px;
+            cursor: pointer;
+        }
+        .autocomplete-suggestion:hover {
+            background: #eee;
+        }
+
+        /* Export Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-close:hover { color: black; }
+        .export-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .export-btn:hover { background: #0056b3; }
+
+        /* Share Modal */
+        #shareUrl {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-btn:hover { background: #218838; }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            z-index: 3000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div id="controls">
+    <label for="sentimentFilter">Filter by Sentiment:</label>
+    <select id="sentimentFilter">
+        <option value="all">All</option>
+        <option value="positive">Positive</option>
+        <option value="neutral">Neutral</option>
+        <option value="negative">Negative</option>
+    </select>
+
+    <label for="categoryFilter">Filter by Category:</label>
+    <select id="categoryFilter">
+        <option value="all">All</option>
+        <option value="restaurant">Restaurant</option>
+        <option value="shopping mall">Shopping Mall</option>
+        <option value="tourist attraction">Tourist Attraction</option>
+        <option value="park">Park</option>
+    </select>
+
+
+    <label for="searchBox">Search Place:</label>
+    <input type="text" id="searchBox" placeholder="Search place name..." />
+    <div id="suggestions" class="autocomplete-suggestions"></div>
+
+    <label for="minReviews">Min Reviews:</label>
+    <input type="number" id="minReviews" placeholder="e.g. 10" min="0" />
+
+    <label for="minRating">Min Rating:</label>
+    <input type="number" id="minRating" placeholder="1–5" step="0.1" min="1" max="5" />
+
+    <label for="keywordFilter">Keyword Filter:</label>
+    <input type="text" id="keywordFilter" placeholder="e.g. coffee" />
+
+    <div class="btn-row">
+      <button class="apply" onclick="applyFilters()">Apply</button>
+      <button class="reset" onclick="resetFilters()">Reset</button>
+      <button class="toggle-dark" onclick="toggleDarkMode()">🌙</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="export" onclick="showExportModal()">📥 Export</button>
+      <button class="share" onclick="showShareModal()">🔗 Share</button>
+    </div>
+
+    <hr>
+    <label><input type="checkbox" id="heatmapPositive"> Positive Heatmap</label><br>
+    <label><input type="checkbox" id="heatmapNeutral"> Neutral Heatmap</label><br>
+    <label><input type="checkbox" id="heatmapNegative"> Negative Heatmap</label>
+</div>
+
+<div id="map"></div>
+
+<div id="sidebar">
+    <span class="close-btn" onclick="closeSidebar()">✖</span>
+    <h2>Place Details</h2>
+    <p>Select a location on the map to see details here.</p>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeExportModal()">&times;</span>
+        <h3>Export Filtered Data</h3>
+        <p>Choose export format:</p>
+        <button class="export-btn" onclick="exportData('csv')">Download as CSV</button>
+        <button class="export-btn" onclick="exportData('geojson')">Download as GeoJSON</button>
+        <p><small>Exports only currently visible/filtered places</small></p>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div id="shareModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeShareModal()">&times;</span>
+        <h3>Share Map View</h3>
+        <p>Share this link to show the current filtered view:</p>
+        <input type="text" id="shareUrl" readonly />
+        <button class="copy-btn" onclick="copyShareUrl()">Copy Link</button>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="notification"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<script>
+const INITIAL_VIEW = { center: [-36.8485, 174.7633], zoom: 12 };
+
+var lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+var map = L.map('map', { layers:[lightTiles] }).setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom);
+
+// Colors
+function getColor(sentiment) {
+    if (sentiment === "positive") return "green";
+    if (sentiment === "negative") return "red";
+    return "orange";
+}
+
+// Marker cluster
+var markerCluster = L.markerClusterGroup();
+map.addLayer(markerCluster);
+
+var allMarkers = [];
+var filteredMarkers = [];
+var heatPoints = { positive: [], neutral: [], negative: [] };
+
+// Sidebar
+function updateSidebar(props) {
+    var sentimentColor = getColor(props.bert_label);
+
+    var keywordsHtml = "N/A";
+    if (props.keywords) {
+        var keywords = (""+props.keywords).split(",");
+        keywordsHtml = keywords.map(k => `<span>${k.trim()}</span>`).join(" ");
+    }
+
+    var sidebar = document.getElementById("sidebar");
+    sidebar.innerHTML = `
+        <span class="close-btn" onclick="closeSidebar()">✖</span>
+        <h2>${props.place_name || 'Unknown'}</h2>
+        <p><b>Address:</b> ${props.address || 'N/A'}</p>
+        <p><b>Sentiment:</b> <span style="color:${sentimentColor}; font-weight:bold;">${props.bert_label || 'N/A'}</span> ${props.sentiment_score ? '('+Number(props.sentiment_score).toFixed(2)+')' : ''}</p>
+        <p><b>Category:</b> ${props.category ? props.category.charAt(0).toUpperCase() + props.category.slice(1) : 'N/A'}</p>
+        <p><b>Ratings:</b> ${props.total_ratings || 'N/A'}</p>
+        <p><b>Reviews:</b> ${props.review_count || 'N/A'}</p>
+        <p><b>Top Keywords:</b></p>
+        <div class="keywords">${keywordsHtml}</div>
+    `;
+    sidebar.classList.add("active");
+}
+function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("active");
+}
+map.on("click", closeSidebar);
+
+// Heat layers
+var heatLayers = {
+    positive: L.heatLayer([], {
+        radius: 30, blur: 15, maxZoom: 17,
+        gradient: {0.2:'lime',0.4:'chartreuse',0.6:'yellowgreen',0.8:'green',1.0:'darkgreen'}
+    }),
+    neutral: L.heatLayer([], {
+        radius: 30, blur: 15, maxZoom: 17,
+        gradient: {0.2:'yellow',0.4:'gold',0.6:'orange',0.8:'darkorange',1.0:'orangered'}
+    }),
+    negative: L.heatLayer([], {
+        radius: 30, blur: 15, maxZoom: 17,
+        gradient: {0.2:'pink',0.4:'deeppink',0.6:'red',0.8:'crimson',1.0:'darkred'}
+    })
+};
+
+// Load GeoJSON
+fetch('shops_sentiment.geojson')
+    .then(res => res.json())
+    .then(data => {
+        data.features.forEach(function(f) {
+            var coords = f.geometry && f.geometry.coordinates;
+            if (!coords || coords.length < 2) return;
+            var lat = coords[1], lon = coords[0];
+            var props = f.properties || {};
+
+            props.place_name = props.place_name || props.name || props.place || '';
+            props.sentiment_score = props.sentiment_score ?? props.bert_score ?? null;
+            props.total_ratings = props.total_ratings || props.user_ratings_total || null;
+            props.review_count = props.review_count || null;
+
+            var color = getColor(props.bert_label);
+
+ // normalize category & sentiment
+var category = (props.category || '').toLowerCase().trim();
+var sentiment = (props.bert_label || '').toLowerCase().trim();
+
+// map category -> emoji
+var emojiMap = {
+  "restaurant": "🍴",
+  "shopping mall": "🛍️",
+  "tourist attraction": "📸",
+  "park": "🌳"
+};
+var emoji = emojiMap[category] || "📍";
+
+// map sentiment -> background color (reuse your getColor if desired)
+var bg = (sentiment === "positive") ? "#2ecc71" : (sentiment === "negative") ? "#e74c3c" : "#f39c12";
+
+// create a small circular div icon with emoji and colored bg
+var html = '<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:'+bg+';box-shadow:0 1px 3px rgba(0,0,0,0.4);font-size:18px;">'+emoji+'</div>';
+
+var icon = L.divIcon({
+  className: 'category-div-icon', // keeps it namespaced
+  html: html,
+  iconSize: [34, 34],
+  iconAnchor: [17, 34],
+  popupAnchor: [0, -30]
+});
+
+var marker = L.marker([lat, lon], { icon: icon });
+
+
+
+            // bind popup for hover
+            marker.bindPopup("<b>"+(props.place_name||'')+"</b><br>"+(props.address||''));
+
+            // hover events for popup
+            marker.on("mouseover", function(e) {
+                this.openPopup();
+            });
+            marker.on("mouseout", function(e) {
+                this.closePopup();
+            });
+
+            // click to open sidebar
+            marker.on("click", function(e) {
+                updateSidebar(props);
+                if (e && e.originalEvent) e.originalEvent.stopPropagation();
+            });
+
+            markerCluster.addLayer(marker);
+            allMarkers.push({ marker: marker, props: props, feature: f });
+
+            if (props.bert_label === "positive") heatPoints.positive.push([lat, lon, 0.7]);
+            else if (props.bert_label === "neutral") heatPoints.neutral.push([lat, lon, 0.7]);
+            else if (props.bert_label === "negative") heatPoints.negative.push([lat, lon, 0.7]);
+        });
+
+        heatLayers.positive.setLatLngs(heatPoints.positive);
+        heatLayers.neutral.setLatLngs(heatPoints.neutral);
+        heatLayers.negative.setLatLngs(heatPoints.negative);
+
+        // Initialize filtered markers
+        filteredMarkers = [...allMarkers];
+        
+        // Load from URL parameters if present
+        loadFromUrl();
+    });
+
+// Filters
+function applyFilters() {
+    var sentimentValue = document.getElementById("sentimentFilter").value;
+    var categoryValue = document.getElementById("categoryFilter").value;
+    var searchValue = (document.getElementById("searchBox").value || "").toLowerCase();
+    var minReviews = parseInt(document.getElementById("minReviews").value) || 0;
+    var minRating = parseFloat(document.getElementById("minRating").value) || 0;
+    var keywordValue = (document.getElementById("keywordFilter").value || "").toLowerCase();
+
+    markerCluster.clearLayers();
+    filteredMarkers = [];
+    
+    allMarkers.forEach(function(item) {
+        var p = item.props || {};
+        var placeName = (p.place_name || "").toLowerCase();
+        var topKeywords = (p.keywords || "").toLowerCase();
+        var reviewCount = Number(p.review_count) || 0;
+        var ratingCount = Number(p.total_ratings) || 0;
+
+        var matchSentiment = (sentimentValue === "all" || (p.bert_label === sentimentValue));
+        var matchCategory = (categoryValue === "all" || (p.category && p.category.toLowerCase() === categoryValue));
+        var matchSearch = (!searchValue || placeName.includes(searchValue));
+        var matchReviews = (reviewCount >= minReviews);
+        var matchRating = (ratingCount >= minRating);
+        var matchKeyword = (!keywordValue || topKeywords.includes(keywordValue));
+
+        if (matchSentiment && matchCategory && matchSearch && matchReviews && matchRating && matchKeyword) {
+            markerCluster.addLayer(item.marker);
+            filteredMarkers.push(item);
+        }
+    });
+    
+    updateUrl();
+}
+
+function resetFilters() {
+    document.getElementById("sentimentFilter").value = "all";
+    document.getElementById("searchBox").value = "";
+    document.getElementById("minReviews").value = "";
+    document.getElementById("minRating").value = "";
+    document.getElementById("keywordFilter").value = "";
+
+    ['heatmapPositive','heatmapNeutral','heatmapNegative'].forEach(id => {
+        var el = document.getElementById(id); if (el) el.checked = false;
+    });
+    Object.keys(heatLayers).forEach(k => { if (map.hasLayer(heatLayers[k])) map.removeLayer(heatLayers[k]); });
+
+    markerCluster.clearLayers();
+    allMarkers.forEach(item => markerCluster.addLayer(item.marker));
+    filteredMarkers = [...allMarkers];
+    closeSidebar();
+    map.setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom);
+    
+    // Clear URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// Heatmap toggles
+document.getElementById("heatmapPositive").addEventListener("change", e => {
+    if (e.target.checked) map.addLayer(heatLayers.positive); else map.removeLayer(heatLayers.positive);
+    updateUrl();
+});
+document.getElementById("heatmapNeutral").addEventListener("change", e => {
+    if (e.target.checked) map.addLayer(heatLayers.neutral); else map.removeLayer(heatLayers.neutral);
+    updateUrl();
+});
+document.getElementById("heatmapNegative").addEventListener("change", e => {
+    if (e.target.checked) map.addLayer(heatLayers.negative); else map.removeLayer(heatLayers.negative);
+    updateUrl();
+});
+
+// Dark mode toggle
+var darkMode = false;
+function toggleDarkMode() {
+    darkMode = !darkMode;
+    if (darkMode) {
+        map.removeLayer(lightTiles); darkTiles.addTo(map);
+        document.getElementById("controls").classList.add("dark");
+    } else {
+        map.removeLayer(darkTiles); lightTiles.addTo(map);
+        document.getElementById("controls").classList.remove("dark");
+    }
+    updateUrl();
+}
+
+// Autocomplete
+document.getElementById("searchBox").addEventListener("input", function() {
+    var input = this.value.toLowerCase();
+    var suggestionBox = document.getElementById("suggestions");
+    suggestionBox.innerHTML = "";
+    if (!input) return;
+    var matches = allMarkers.filter(item => (item.props.place_name||"").toLowerCase().includes(input));
+    matches.slice(0,5).forEach(m => {
+        var div = document.createElement("div");
+        div.className = "autocomplete-suggestion";
+        div.textContent = m.props.place_name;
+        div.onclick = () => {
+            document.getElementById("searchBox").value = m.props.place_name;
+            suggestionBox.innerHTML = "";
+            map.setView(m.marker.getLatLng(), 16);
+            updateSidebar(m.props);
+        };
+        suggestionBox.appendChild(div);
+    });
+});
+
+// Export functionality
+function showExportModal() {
+    document.getElementById("exportModal").style.display = "block";
+}
+
+function closeExportModal() {
+    document.getElementById("exportModal").style.display = "none";
+}
+
+function exportData(format) {
+    if (filteredMarkers.length === 0) {
+        showNotification("No data to export. Apply filters first.", "error");
+        return;
+    }
+
+    if (format === 'csv') {
+        exportCSV();
+    } else if (format === 'geojson') {
+        exportGeoJSON();
+    }
+    
+    closeExportModal();
+    showNotification(`Exported ${filteredMarkers.length} places as ${format.toUpperCase()}`);
+}
+
+function exportCSV() {
+    var headers = ['place_name', 'address', 'bert_label', 'sentiment_score', 'total_ratings', 'review_count', 'keywords', 'latitude', 'longitude'];
+    var csvContent = headers.join(',') + '\n';
+    
+    filteredMarkers.forEach(item => {
+        var props = item.props;
+        var coords = item.marker.getLatLng();
+        var row = [
+            `"${props.place_name || ''}"`,
+            `"${props.address || ''}"`,
+            `"${props.bert_label || ''}"`,
+            props.sentiment_score || '',
+            props.total_ratings || '',
+            props.review_count || '',
+            `"${props.keywords || ''}"`,
+            coords.lat,
+            coords.lng
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+    
+    downloadFile(csvContent, 'sentiment_places.csv', 'text/csv');
+}
+
+function exportGeoJSON() {
+    var features = filteredMarkers.map(item => item.feature);
+    var geojson = {
+        type: "FeatureCollection",
+        features: features
+    };
+    
+    var content = JSON.stringify(geojson, null, 2);
+    downloadFile(content, 'sentiment_places.geojson', 'application/geo+json');
+}
+
+function downloadFile(content, filename, mimeType) {
+    var blob = new Blob([content], { type: mimeType });
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+// Share functionality
+function showShareModal() {
+    var shareUrl = generateShareUrl();
+    document.getElementById("shareUrl").value = shareUrl;
+    document.getElementById("shareModal").style.display = "block";
+}
+
+function closeShareModal() {
+    document.getElementById("shareModal").style.display = "none";
+}
+
+function generateShareUrl() {
+    var params = new URLSearchParams();
+    
+    // Get current filter values
+    var sentiment = document.getElementById("sentimentFilter").value;
+    var search = document.getElementById("searchBox").value;
+    var minReviews = document.getElementById("minReviews").value;
+    var minRating = document.getElementById("minRating").value;
+    var keyword = document.getElementById("keywordFilter").value;
+    
+    // Get map view
+    var center = map.getCenter();
+    var zoom = map.getZoom();
+    
+    // Get heatmap states
+    var heatmaps = [];
+    if (document.getElementById("heatmapPositive").checked) heatmaps.push('positive');
+    if (document.getElementById("heatmapNeutral").checked) heatmaps.push('neutral');
+    if (document.getElementById("heatmapNegative").checked) heatmaps.push('negative');
+    
+    // Add parameters
+    if (sentiment !== 'all') params.set('sentiment', sentiment);
+    if (search) params.set('search', search);
+    if (minReviews) params.set('minReviews', minReviews);
+    if (minRating) params.set('minRating', minRating);
+    if (keyword) params.set('keyword', keyword);
+    if (heatmaps.length > 0) params.set('heatmaps', heatmaps.join(','));
+    if (darkMode) params.set('dark', '1');
+    
+    params.set('lat', center.lat.toFixed(6));
+    params.set('lng', center.lng.toFixed(6));
+    params.set('zoom', zoom);
+    
+    return window.location.origin + window.location.pathname + '?' + params.toString();
+}
+
+function updateUrl() {
+    var shareUrl = generateShareUrl();
+    window.history.replaceState({}, document.title, shareUrl);
+}
+
+function loadFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    
+    // Set filter values
+    if (params.get('sentiment')) document.getElementById('sentimentFilter').value = params.get('sentiment');
+    if (params.get('search')) document.getElementById('searchBox').value = params.get('search');
+    if (params.get('minReviews')) document.getElementById('minReviews').value = params.get('minReviews');
+    if (params.get('minRating')) document.getElementById('minRating').value = params.get('minRating');
+    if (params.get('keyword')) document.getElementById('keywordFilter').value = params.get('keyword');
+    
+    // Set map view
+    var lat = params.get('lat');
+    var lng = params.get('lng');
+    var zoom = params.get('zoom');
+    if (lat && lng && zoom) {
+        map.setView([parseFloat(lat), parseFloat(lng)], parseInt(zoom));
+    }
+    
+    // Set heatmaps
+    var heatmaps = params.get('heatmaps');
+    if (heatmaps) {
+        heatmaps.split(',').forEach(h => {
+            var checkbox = document.getElementById('heatmap' + h.charAt(0).toUpperCase() + h.slice(1));
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+    
+    // Set dark mode
+    if (params.get('dark') === '1') {
+        toggleDarkMode();
+    }
+    
+    // Apply filters if any were set
+    if (params.toString()) {
+        applyFilters();
+    }
+}
+
+function copyShareUrl() {
+    var shareUrl = document.getElementById("shareUrl");
+    shareUrl.select();
+    shareUrl.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showNotification("Share link copied to clipboard!");
+        closeShareModal();
+    } catch (err) {
+        showNotification("Failed to copy link", "error");
+    }
+}
+
+// Notification system
+function showNotification(message, type = 'success') {
+    var notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = 'notification';
+    if (type === 'error') {
+        notification.style.background = '#dc3545';
+    } else {
+        notification.style.background = '#28a745';
+    }
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    var exportModal = document.getElementById("exportModal");
+    var shareModal = document.getElementById("shareModal");
+    if (event.target == exportModal) exportModal.style.display = "none";
+    if (event.target == shareModal) shareModal.style.display = "none";
+}
+
+// Legend
+var legend = L.control({ position: "bottomright" });
+legend.onAdd = function(map) {
+    var div = L.DomUtil.create("div", "legend");
+
+    // Sentiment colors
+    div.innerHTML += "<b>Sentiment</b><br>";
+    div.innerHTML += "<i style='background: green'></i> Positive<br>";
+    div.innerHTML += "<i style='background: orange'></i> Neutral<br>";
+    div.innerHTML += "<i style='background: red'></i> Negative<br><hr>";
+
+    // Category symbols (match your marker system)
+    div.innerHTML += "<b>Category</b><br>";
+    div.innerHTML += "🍴 Restaurant<br>";
+    div.innerHTML += "🛍️ Shopping Mall<br>";
+    div.innerHTML += "📸 Tourist Attraction<br>";
+    div.innerHTML += "🌳 Park<br>";
+
+    return div;
+};
+
+legend.addTo(map);
+</script>
+</body>
+</html>
