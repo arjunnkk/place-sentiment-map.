@@ -6,14 +6,6 @@ This project combines **Geospatial Intelligence**, **Natural Language Processing
 
 It uses **sentiment** and **aspect-based opinion mining**, paired with **Explainable AI (XAI)** techniques to improve **trust and transparency** in how people interpret **place-based user feedback**.
 
-## 🧩 Team Contributions
-
-| **Member**                     | **Role**                        | **Key Components**                                                                                                 |
-| ------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Arjun Koodathil Kalliyadan** | Data Collection & Preprocessing  | Google Places API data collection, cleaning, deduplication, normalization, and category mapping                    |
-| **Shubham Mohapatra**          | Explainable AI / NLP             | Sentiment & aspect-based analysis, confidence scoring, BERT model inference, and explainability outputs            |
-| **Abhiram Sathyarajan**        | Web Design & Visualization       | Interactive Leaflet-based map UI, GeoJSON conversion, heatmaps, filters, and explainable visual analytics interface |
-
 ## ⚙️ Data Pipeline
 
 ### **Data Collection (Arjun)**
@@ -32,8 +24,6 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 - Category-based markers, interactive filters, tooltips, and side panel
 
 ## 🧮 Final Integrated Dataset
-
-## 🧩 Dataset Structure
 
 | Column            | Description                                                 |
 | ----------------- | ----------------------------------------------------------- |
