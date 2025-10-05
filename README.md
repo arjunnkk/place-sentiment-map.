@@ -1,6 +1,8 @@
-# Explainable Place Sentiment Map (Auckland)
+🗺️ Explainable Place Sentiment Map (Auckland)
 
-This project builds a city-wide dataset of places in Auckland and visualizes sentiment by location with explainable NLP.
+Goal:
+This project combines Geospatial Intelligence, Natural Language Processing (NLP), and User-Centred Web Design to extract and visualize emotional patterns tied to specific locations in Auckland.
+It uses sentiment and aspect-based opinion mining, paired with Explainable AI techniques to improve trust and transparency in how people interpret place-based user feedback.
 
 ## What’s included
 - `notebooks/01_data_collection_clean.ipynb` — data collection & cleaning (guarded; no API calls by default)
