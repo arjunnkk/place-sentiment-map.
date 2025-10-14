@@ -14,9 +14,10 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 - ≤5 reviews per place (as per API quota)
 
 ### **NLP & Explainability (Shubham)**
-- Aspect extraction (`aspect` column)  
-- Sentiment classification (`sentiment_label`, `confidence`)  
-- Explainability layer: key tokens and confidence per aspect
+- Used transformer-based models for sentiment classification and aspect keyword extraction
+- Output includes: bert_label, bert_pos, bert_neg, bert_score (scaled from -1 to 1), plus a list of keywords
+- Sentiment is computed at review level, then aggregated per place
+- Future expansion planned for aspect-wise sentiment and explanation overlays (token-level highlights)
 
 ### **Visualization & Interaction (Abhiram)**
 - Conversion of cleaned CSV to GeoJSON  
@@ -35,8 +36,10 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 | `review_count`    | Number of user reviews collected                            |
 | `total_ratings`   | Google star ratings                                         |
 | `keywords`        | Top aspects/terms mentioned in reviews                      |
-| `sentiment_label` | Positive / Neutral / Negative                               |
-| `sentiment_score` | Average sentiment score                                     |
+| `bert_label`      | Positive / Neutral / Negative                               |
+| `bert_pos`        | % of reviews with positive sentiment                        |
+| `bert_label`      | % of reviews with negative sentiment                        |
+| `bert_score`      | Average sentiment score                                     |
 | `aspect`          | Extracted aspect terms                                      |
 | `confidence`      | Model confidence score                                      |
 
@@ -46,7 +49,7 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 | Member | Role | Key Responsibilities |
 |---------|------|----------------------|
 | **Arjun Koodathil Kalliyadan** | Data Collection & Preprocessing | Collected and cleaned place and review data using the Google Places API, standardized categories, and prepared final CSVs for NLP and visualization. |
-| **Shubham Mohapatra** | NLP & Explainable AI | Built sentiment and aspect-based opinion models using transformers, generated sentiment scores and labels, and implemented explainability (confidence & aspect tokens). |
+| **Shubham Mohapatra** | NLP & Explainable AI | Applied transformer models to generate sentiment scores and labels, extracted keywords, and aggregated results by place. |
 | **Abhiram Sathyarajan** | Web Design & Visualization | Developed the front-end visualization using Leaflet.js, integrated GeoJSON data, implemented interactive filters, heatmaps, and category-based visual markers. |
 
 ---
@@ -59,9 +62,9 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
    - Exported as structured CSVs  
 
 2. **NLP & Explainability**  
-   - Applied transformer-based sentiment and aspect extraction  
-   - Generated `sentiment_label`, `sentiment_score`, and `aspect` outputs  
-   - Merged model output into the main dataset  
+   - Applied siebert/sentiment-roberta-large-english for binary sentiment classification
+   - Computed per-place metrics: proportion of positive/negative reviews, overall label, and average score
+   - Extracted relevant keywords (aspects) per place
 
 3. **Visualization & Web Design**  
    - Converted final dataset to GeoJSON (`shops_sentiment.geojson`) using Python (`convert_to_geojson.py`)  
@@ -77,12 +80,12 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 | Layer | Tools Used |
 |--------|-------------|
 | **Data & Preprocessing** | Python, Pandas, GeoPandas, Google Places API |
-| **NLP & Explainable AI** | Transformers (BERT), Scikit-learn, Python |
+| **NLP & Explainable AI** | Transformers (Huggingface- BERT), Scikit-learn, Pandas, Custom rules |
 | **Visualization** | Leaflet.js, HTML, CSS, JavaScript |
 | **Data Format** | CSV → GeoJSON |
 | **Hosting** | Localhost / GitHub Pages |
 
-# 🧭 B. Data Collection & Preprocessing (Arjun Koodathil Kalliyadan)
+# 🧭 A. Data Collection & Preprocessing (Arjun Koodathil Kalliyadan)
 
 ## What’s included
 - `notebooks/01_data_collection_clean.ipynb` — data collection & cleaning (guarded; no API calls by default)
@@ -117,7 +120,35 @@ It uses **sentiment** and **aspect-based opinion mining**, paired with **Explain
 ## Releases
 - `data-freeze-v1` — initial data hand-off and final CSVs.
 
-# 🧭 B. Web Design & Visualization (Abhiram Sathyarajan)
+# 🧭 B. NLP & Sentiment Modeling (Shubham Mohapatra)
+## Overview
+This stage focused on extracting sentiment from user reviews using three different approaches — VADER, TextBlob, and a Transformer-based BERT model — and selecting the most accurate one through human-annotated evaluation.
+
+The output sentiment metrics were aggregated per place to support geospatial visualization and deeper insight into how people feel about different locations in Auckland..
+
+## 💻 Components
+
+| File                       | Description                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `Sent.ipynb`               | Performs sentiment analysis on all the reviews extracted using Google API                       |
+| `manual labels for reviews.csv`  | Includes 30 test reviews analysed and labelled bu humans as positive, negative or neutral  |
+| `sentiment_merged.csv` | Consists of sentiment labels and scores using the best performing sentiment models. |
+
+## Quick start
+1. Use Jupyter Notebook and open `Sent.ipynb`.
+2. Import `places.csv` and `reviews.csv` from `data/final/*`.
+3. Run all the cell blocks.
+4. Extract a sample of 30 reviews to test manually annotated human sentiment against labels from VADER, TextBLOB and BERT.
+5. Compare the models using classification report.
+6. Get outputs for all categories using the best model.
+
+
+## Ethics & limits
+- Sentiment models applied only after data cleaning and anonymization.
+- No personal identifiers from reviewers were stored or processed.
+- Keyword extraction avoids brand names or individual user mentions.
+
+# 🧭 C. Web Design & Visualization (Abhiram Sathyarajan)
 
 ## 🌐 Overview
 
