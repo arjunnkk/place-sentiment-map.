@@ -47,14 +47,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-hf-
             
-      - name: Install deps
+      - name: Install deps (incl. Torch>=2.6 & scikit-learn)
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pip
+          pip install --upgrade --index-url https://download.pytorch.org/whl/cpu "torch>=2.6,<3"
           pip install \
-            papermill jupyter nbconvert nbclient ipykernel \
-            pandas numpy python-dotenv requests openpyxl \
-            vaderSentiment nltk textblob scikit-learn \
-            transformers "torch==2.4.0" huggingface_hub
+          papermill jupyter nbconvert nbclient ipykernel \
+          pandas numpy python-dotenv requests openpyxl \
+          vaderSentiment nltk textblob scikit-learn transformers
 
       - name: Register kernel for papermill
         run: |
