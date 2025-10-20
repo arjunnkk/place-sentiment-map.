@@ -1,0 +1,12 @@
+papermill
+jupyter
+nbconvert
+nbclient
+ipykernel
+pandas
+numpy
+python-dotenv
+requests
+vaderSentiment
+nltk
+openpyxl
