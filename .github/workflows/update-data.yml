@@ -1,25 +1,32 @@
-name: Update sentiment (no notebook changes)
+name: Update data (notebook)
 
 on:
   schedule:
-    - cron: "0 14 * * *"    
+    - cron: "0 14 * * *"   # daily at 14:00 UTC
   workflow_dispatch: {}
 
+concurrency:
+  group: update-data
+  cancel-in-progress: true
+
 jobs:
-  run:
+  run-notebook:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: write
+
     env:
-      
+      # Use the same secret you already created
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      # Expose both names so notebooks that read either one will work
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug tree
+      - name: List files (debug)
         run: |
           pwd
           ls -R
@@ -30,18 +37,18 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install deps (runner-side, not in notebook)
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install papermill jupyter nbconvert nbclient ipykernel \
                       pandas numpy python-dotenv requests \
                       vaderSentiment nltk openpyxl
 
-      - name: Register kernel so papermill can find it
+      - name: Register kernel for papermill
         run: |
           python -m ipykernel install --user --name python3
 
-      - name: Pre-fetch NLTK VADER (if notebook uses it)
+      - name: Download NLTK resources (VADER)
         run: |
           python - << 'PY'
           import nltk
@@ -51,35 +58,49 @@ jobs:
             pass
           PY
 
-      
-
-      - name: Create .env where the notebook expects it
+      # --- Make CI look like your local run (no notebook edits needed) ---
+      - name: Create .env in data/final
         working-directory: data/final
         run: |
-          # Write BOTH names in case the notebook loads either
           echo "GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" > .env
           echo "GOOGLE_API_KEY=${GOOGLE_API_KEY}" >> .env
-          # Show (redacted) proof
           awk -F= '{print $1"=<set>"}' .env
 
-      - name: Run Sent.ipynb from its native folder
+      # --- Run data collection first ---
+      - name: Run notebook (Data collection)
         working-directory: data/final
         run: |
-          # Use the notebook's own relative paths by running IN that folder
+          test -f "data_collection_final.ipynb" || (echo "data_collection_final.ipynb not found in data/final/" && exit 1)
+          papermill --log-output -k python3 "data_collection_final.ipynb" "_out_data_collection.ipynb"
+
+      # --- Then run sentiment ---
+      - name: Run sentiment notebook
+        working-directory: data/final
+        run: |
+          test -f "Sent.ipynb" || (echo "Sent.ipynb not found in data/final/" && exit 1)
           papermill --log-output -k python3 "Sent.ipynb" "_out_sent.ipynb"
 
-      - name: Show outputs
+      - name: Show outputs (debug)
         run: |
           ls -lh data/final
 
+      - name: Upload executed notebooks (artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebooks
+          path: |
+            data/final/_out_data_collection.ipynb
+            data/final/_out_sent.ipynb
+          if-no-files-found: ignore
+
       - name: Commit updated data (if changed)
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
           git add data/final/* || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "auto: refresh sentiment $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            git push
+            git commit -m "auto: refresh data $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push || true
           fi
