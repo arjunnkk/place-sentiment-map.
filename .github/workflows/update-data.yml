@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    # Option A: expose secret to all steps in this job
+    
     env:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
@@ -33,13 +33,12 @@ jobs:
          python -m pip install --upgrade pip
          pip install papermill jupyter pandas numpy python-dotenv openpyxl requests vaderSentiment nltk
 
-      # (Optional) keep this, but not required anymore since we set job-level env
+      
       - name: Confirm secret is available
         run: |
           if [ -z "${GOOGLE_API_KEY}" ]; then echo "GOOGLE_API_KEY is NOT set" && exit 1; else echo "GOOGLE_API_KEY is set"; fi
 
       - name: Run notebook (Data collection)
-        # Option B (alternative): you could put env: { GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }} } here instead of at job level
         run: |
           papermill data/final/data_collection_final.ipynb data/final/etl-output-data-collection.ipynb
 
@@ -47,11 +46,6 @@ jobs:
         run: |
          cd data/final
          papermill -k python3 "Sent.ipynb" "etl-output-sent.ipynb"
-
-      - name: Run aspect notebook
-        run: |
-         cd data/final
-          papermill -k python3 "aspects.ipynb" "etl-output-aspects.ipynb"
 
       - name: Commit updated data (if changed)
         run: |
