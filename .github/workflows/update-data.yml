@@ -17,14 +17,12 @@ jobs:
       contents: write
 
     env:
-      # Use the same secret you already created
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      # Expose both names so notebooks that read either one will work
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      HF_HUB_ENABLE_XET: "0"
-      HF_HUB_ENABLE_HF_TRANSFER: "0"
-      # Use workspace path here (runner.temp is not allowed in job env)
-      HF_HOME: ${{ github.workspace }}/.hf-cache
+      # Hugging Face cache settings
+      HF_HOME: ${{ runner.temp }}/hf-cache
+      HF_HUB_ENABLE_XET: "0"           # avoid Xet CAS path that was erroring
+      HF_HUB_ENABLE_HF_TRANSFER: "0"   # plain HTTP download path
 
     steps:
       - name: Checkout
@@ -48,19 +46,15 @@ jobs:
           key: ${{ runner.os }}-hf-${{ hashFiles('data/final/Sent.ipynb') }}
           restore-keys: |
             ${{ runner.os }}-hf-
-      
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          # CPU-only torch to avoid huge CUDA wheels
-          pip install --index-url https://download.pytorch.org/whl/cpu torch==2.3.1
-          # Stable HF stack that avoids the flaky Xet path
-          pip install "transformers==4.45.2" "huggingface_hub<0.25"
-          # The rest of your requirements
           pip install \
             papermill jupyter nbconvert nbclient ipykernel \
             pandas numpy python-dotenv requests openpyxl \
-            vaderSentiment nltk textblob scikit-learn
+            vaderSentiment nltk textblob scikit-learn \
+            transformers "torch==2.4.0" huggingface_hub
 
       - name: Register kernel for papermill
         run: |
@@ -72,17 +66,43 @@ jobs:
           import nltk
           try:
               nltk.download('vader_lexicon', quiet=True)
-              # These two are common if your notebook tokenizes:
               nltk.download('punkt', quiet=True)
               nltk.download('stopwords', quiet=True)
           except Exception:
               pass
           try:
-              # TextBlob works without corpora for polarity, but this avoids edge cases:
               from textblob import download_corpora
-              download_corpora.download_lite()   # small set, fast
+              download_corpora.download_lite()
           except Exception:
               pass
+          PY
+
+      # Prefetch the models the notebook uses so execution can be offline
+      - name: Prefetch Hugging Face models to cache
+        env:
+          HF_HOME: ${{ env.HF_HOME }}
+        run: |
+          python - << 'PY'
+          import time
+          from huggingface_hub import snapshot_download
+
+          MODELS = [
+              "siebert/sentiment-roberta-large-english",
+              "nlptown/bert-base-multilingual-uncased-sentiment",
+          ]
+
+          for repo in MODELS:
+              for attempt in range(5):
+                  try:
+                      print(f"Downloading {repo} (attempt {attempt+1}/5)")
+                      snapshot_download(repo_id=repo, local_files_only=False, resume_download=True)
+                      print(f"OK: {repo}")
+                      break
+                  except Exception as e:
+                      print(f"Retrying {repo} due to: {e}")
+                      time.sleep(5 * (attempt + 1))
+              else:
+                  raise SystemExit(f"Failed to prefetch {repo}")
           PY
 
 
@@ -122,6 +142,8 @@ jobs:
 
       - name: Run notebook (Data collection)
         working-directory: data/final
+        env:
+          TRANSFORMERS_OFFLINE: "1"
         run: |
           test -f "data_collection_final.ipynb" || (echo "data_collection_final.ipynb not found in data/final/" && exit 1)
           papermill --log-output -k python3 "data_collection_final.ipynb" "_out_data_collection.ipynb"
@@ -138,11 +160,9 @@ jobs:
         working-directory: data/final
         env:
           TRANSFORMERS_OFFLINE: "1"
-          HF_HUB_OFFLINE: "1"
         run: |
           test -f "Sent.ipynb" || (echo "Sent.ipynb not found in data/final/" && exit 1)
           papermill --log-output -k python3 "Sent.ipynb" "_out_sent.ipynb"
-
       
       - name: Show outputs (debug)
         run: |
