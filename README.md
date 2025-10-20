@@ -180,6 +180,180 @@ It bridges **AI outputs** and **geospatial visualization** for an explainable an
 
 - **Responsive & Accessible UI** using plain HTML/CSS/JS (no external frameworks)
 
+# 🧭 User Manual
+
+The **Explainable Place Sentiment Map** is an interactive web application designed to visualize emotional and opinion-based data tied to urban locations in Auckland. It enables users to explore spatial sentiment patterns derived from user-generated Google Maps reviews analyzed by an AI-based sentiment classifier.  
+
+This section functions as a practical user manual for end-users, researchers, and developers intending to interact with or extend the system.
+
+---
+
+## 🚀 Accessing the Application
+
+The application is publicly accessible at:  
+🔗 **[https://arjunnkk.github.io/place-sentiment-map](https://arjunnkk.github.io/place-sentiment-map)**
+
+The source code, GeoJSON dataset, and related documentation are hosted on the GitHub repository:  
+🔗 **[https://github.com/arjunnkk/place-sentiment-map](https://github.com/arjunnkk/place-sentiment-map)**
+
+The application runs directly in a web browser with no installation required. It has been tested and optimized for **Google Chrome**, **Mozilla Firefox**, and **Microsoft Edge** on both desktop and laptop environments.
+
+> *(Insert Figure 9: Screenshot of homepage interface showing control panel and map view.)*
+
+---
+
+## 🗺️ Interface Overview
+
+Upon launching the web page, users are greeted with an interactive **Leaflet map** centered on Auckland City.  
+The main components of the interface include:
+
+- **Map View** – Displays clustered emoji markers representing different place categories  
+  *(e.g., restaurants 🍴, shopping malls 🛍️, parks 🌳, tourist attractions 📸).*
+
+- **Control Panel (Top-Left)** – A white floating interface panel where users can apply filters, toggle layers, or export data.
+
+- **Sidebar (Right)** – A collapsible information panel displaying details about a selected location, including sentiment score, category, ratings, and aspect keywords.
+
+- **Heatmap Toggle Section** – Located below the main filters; users can activate sentiment heatmaps to observe density-based emotional intensity.
+
+- **Dark/Light Mode Button (🌙)** – Allows switching between light and dark themes for accessibility and user comfort.
+
+The interface is fully responsive and dynamically adjusts to different screen sizes and browser window dimensions.
+
+> *(Insert Figure 10: Annotated layout showing map, controls, and sidebar.)*
+
+---
+
+## 🧭 Navigating the Map
+
+Users can **pan and zoom** freely using mouse or touch controls.  
+Hovering over a marker reveals a tooltip displaying the **place name and address**.  
+Clicking a marker opens the **sidebar** with detailed metadata.
+
+### Map Legend (Bottom-Right)
+- 🟩 **Green** = Positive sentiment  
+- 🟧 **Orange** = Neutral sentiment  
+- 🟥 **Red** = Negative sentiment  
+
+Each emoji marker indicates the place’s category, allowing users to visually distinguish locations even in dense clusters.
+
+---
+
+## 🔍 Filtering Data
+
+The **Control Panel** offers several filters that dynamically refine visible map data.  
+These filters can be used independently or in combination.
+
+1. **Sentiment Filter:**  
+   Dropdown – *All, Positive, Neutral, Negative*  
+   > Selecting “Positive” displays only green markers associated with positive sentiment predictions.
+
+2. **Category Filter:**  
+   Dropdown – *All, Restaurant, Shopping Mall, Tourist Attraction, Park*  
+   > Enables thematic exploration of sentiment trends per category.
+
+3. **Search Box:**  
+   Live autocomplete search to find a specific place name.  
+   > Example: Typing “Sky Tower” presents matching entries and re-centers the map.
+
+4. **Minimum Reviews and Ratings:**  
+   Numeric inputs restrict results to places meeting given thresholds.  
+   > Example: Entering “50” in *Min Reviews* shows only highly reviewed locations.
+
+5. **Keyword Filter:**  
+   Text input filter based on aspect keywords (e.g., “coffee”, “service”).  
+   > The map updates to show places whose extracted keywords include the input term.
+
+> *(Insert Figure 11: Screenshot demonstrating filter panel and filtered map.)*
+
+Once filters are applied, press **Apply** to update the map instantly.  
+**Reset** clears all filters and restores the default view.  
+
+The map’s state is automatically encoded into the URL, allowing users to **bookmark or share** specific configurations.
+
+---
+
+## 🏷️ Viewing Place Details
+
+When a marker is clicked:
+- The **sidebar slides out** from the right.
+- It displays:
+  - Place name and address  
+  - Sentiment label (positive / neutral / negative) with colored text  
+  - Sentiment score (numerical value from the BERT model)  
+  - Category, total ratings, and review count  
+  - Top Keywords as grey pill-shaped tags  
+
+**Example:**
+> *The Coffee Club, Britomart*  
+> Sentiment: **Positive (0.83)**  
+> Keywords: *coffee, service, breakfast, friendly staff*
+
+> *(Insert Figure 12: Sidebar example displaying place details and keywords.)*
+
+---
+
+## 🌡️ Heatmap Visualization
+
+The lower part of the Control Panel includes checkboxes for:
+- ✅ **Positive Heatmap**
+- ⚪ **Neutral Heatmap**
+- 🔴 **Negative Heatmap**
+
+Each can be toggled independently. These heatmaps aggregate sentiment intensities spatially, creating smooth gradients of emotional density across Auckland.  
+
+- Positive = shades of **green**  
+- Negative = shades of **red and pink**  
+
+Users can overlay multiple heatmaps simultaneously to compare sentiment zones.
+
+> *(Insert Figure 13: Example showing positive vs. negative heatmap overlays.)*
+
+---
+
+## 🌙 Dark Mode and Accessibility
+
+Clicking the **moon (🌙) button** toggles **dark mode**, switching to a high-contrast theme using CartoDB’s *Dark Matter* basemap.  
+
+This improves comfort for nighttime viewing and accessibility for users with light sensitivity.  
+Both the control panel and sidebar adapt their colors automatically for legibility.
+
+---
+
+## 📤 Exporting and Sharing Data
+
+Users can download filtered map data directly from the interface:
+
+1. Click the **Export (📥)** button.  
+2. Choose the desired format:
+   - **CSV** – For use in spreadsheets or statistical software.  
+   - **GeoJSON** – For GIS tools or other web map applications.
+
+Exports include **only the currently visible (filtered) features**, enabling targeted analysis.
+
+The **Share (🔗)** button generates a sharable URL containing all current filter states and map coordinates.  
+Copying and sending this link allows others to load the same filtered view — ideal for collaboration or presentations.
+
+> *(Insert Figure 14: Export modal and share link demonstration.)*
+
+---
+
+## 🌐 Browser Compatibility and Requirements
+
+- Works entirely in the browser using **HTML5**, **JavaScript**, and **CSS3**.  
+- **No installation or plugins required.**
+- JavaScript must be enabled.
+- Recommended minimum screen resolution: **1366×768**.
+- Optimized for datasets up to **1,000 features** for smooth performance.
+
+Developers can customize the visualization by editing:
+- `shops_sentiment_map.html` (main web app)
+- `shops_sentiment.geojson` (spatial dataset)
+
+Both files are open-source and available in the GitHub repository.
+
+---
+
 ## 🚀 Hosting
 
 The visualization is hosted via **GitHub Pages**:
