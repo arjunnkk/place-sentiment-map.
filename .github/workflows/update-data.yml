@@ -58,7 +58,6 @@ jobs:
             pass
           PY
 
-      # --- Make CI look like your local run (no notebook edits needed) ---
       - name: Create .env in data/final
         working-directory: data/final
         run: |
@@ -66,7 +65,43 @@ jobs:
           echo "GOOGLE_API_KEY=${GOOGLE_API_KEY}" >> .env
           awk -F= '{print $1"=<set>"}' .env
 
-      # --- Run data collection first ---
+      - name: Prepare processed fallbacks from frozen data
+        run: |
+          set -e
+          mkdir -p data/processed
+
+          # If final places exist, make basic/details fallbacks the notebook expects
+          if [ -f "data/final/places.csv" ]; then
+            python - << 'PY'
+            import pandas as pd
+            from pathlib import Path
+            final_places = Path("data/final/places.csv")
+            final_reviews = Path("data/final/reviews.csv")
+            proc_dir = Path("data/processed")
+            proc_dir.mkdir(parents=True, exist_ok=True)
+
+          if final_places.exists():
+          df = pd.read_csv(final_places)
+          basic_cols_order = [
+          "place_id","name","lat","lng","address",
+          "google_types","rating","user_ratings_total","category","source_category"
+          ]
+          keep = [c for c in basic_cols_order if c in df.columns]
+          df[keep].to_csv(proc_dir/"auckland_places_basic.csv", index=False)
+
+          df.to_csv(proc_dir/"auckland_places_details.csv", index=False)
+
+          if final_reviews.exists():
+          pd.read_csv(final_reviews).to_csv(proc_dir/"auckland_reviews.csv", index=False)
+          PY
+          else
+            echo "data/final/places.csv not found; skipping seeding."
+          fi
+
+          # Show what we have now
+          ls -lh data/processed || true
+
+      
       - name: Run notebook (Data collection)
         working-directory: data/final
         run: |
