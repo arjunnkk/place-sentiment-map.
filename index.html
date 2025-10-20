@@ -5,35 +5,80 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Leaflet CSS -->
+    <!-- External Leaflet library and plugin stylesheets -->
+    <!-- Leaflet: Core mapping library for interactive maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Marker Cluster: Handles visual grouping of nearby markers -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
 
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        #map { height: 100vh; width: 100%; }
+        /* ========================================
+           BASE STYLES
+           ======================================== */
+        
+        /* Remove default margins and set base font */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+        }
+        
+        /* Map container fills entire viewport */
+        #map { 
+            height: 100vh; 
+            width: 100%; 
+        }
+        
+        /* ========================================
+           CONTROL PANEL STYLES
+           ======================================== */
+        
+        /* Filter control panel positioned in top-left corner */
         #controls {
             position: absolute;
             top: 10px;
             left: 50px;
-            z-index: 1000;
+            z-index: 1000; /* Appears above map */
             background: white;
             padding: 12px;
             border-radius: 8px;
             box-shadow: 0 0 5px rgba(0,0,0,0.3);
             max-width: 260px;
             font-size: 14px;
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.3s, color 0.3s; /* Smooth theme transitions */
         }
-        #controls.dark { background: #2c2c2c; color: #f1f1f1; }
-        #controls label { display: block; margin-top: 6px; }
-        #controls input[type="text"], #controls input[type="number"], #controls select {
+        
+        /* Dark mode styling for control panel */
+        #controls.dark { 
+            background: #2c2c2c; 
+            color: #f1f1f1; 
+        }
+        
+        /* Label styling with spacing */
+        #controls label { 
+            display: block; 
+            margin-top: 6px; 
+        }
+        
+        /* Full-width input fields and dropdowns */
+        #controls input[type="text"], 
+        #controls input[type="number"], 
+        #controls select {
             width: 100%;
             box-sizing: border-box;
             margin-top: 4px;
         }
-        #controls .btn-row { margin-top: 8px; display:flex; gap:8px; flex-wrap: wrap; }
+        
+        /* Button row layout with flexbox */
+        #controls .btn-row { 
+            margin-top: 8px; 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+        }
+        
+        /* Base button styling */
         #controls button {
             padding: 6px 8px;
             border: none;
@@ -41,12 +86,19 @@
             cursor: pointer;
             font-size: 12px;
         }
-        #controls button.apply { background: #007bff; color: white; }
-        #controls button.reset { background: #6c757d; color: white; }
-        #controls button.toggle-dark { background: #222; color: #fff; }
-        #controls button.export { background: #28a745; color: white; }
-        #controls button.share { background: #17a2b8; color: white; }
+        
+        /* Color-coded buttons for different actions */
+        #controls button.apply { background: #007bff; color: white; } /* Blue for primary action */
+        #controls button.reset { background: #6c757d; color: white; } /* Gray for reset */
+        #controls button.toggle-dark { background: #222; color: #fff; } /* Dark for theme toggle */
+        #controls button.export { background: #28a745; color: white; } /* Green for export */
+        #controls button.share { background: #17a2b8; color: white; } /* Teal for share */
 
+        /* ========================================
+           LEGEND STYLES
+           ======================================== */
+        
+        /* Legend box styling positioned at bottom-right */
         .legend {
             background: white;
             padding: 6px 8px;
@@ -56,6 +108,8 @@
             line-height: 18px;
             color: #555;
         }
+        
+        /* Color squares in legend */
         .legend i {
             width: 18px;
             height: 18px;
@@ -63,21 +117,33 @@
             margin-right: 8px;
             opacity: 0.8;
         }
+        
+        /* ========================================
+           SIDEBAR STYLES
+           ======================================== */
+        
+        /* Slide-in sidebar for detailed location information */
         #sidebar {
             position: absolute;
             top: 0;
-            right: -320px;
+            right: -320px; /* Hidden off-screen by default */
             width: 300px;
             height: 100%;
             background: #f9f9f9;
             border-left: 1px solid #ddd;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-            overflow-y: auto;
+            overflow-y: auto; /* Scrollable content */
             padding: 15px;
-            transition: right 0.3s ease-in-out;
-            z-index: 1100;
+            transition: right 0.3s ease-in-out; /* Smooth slide animation */
+            z-index: 1100; /* Above map and controls */
         }
-        #sidebar.active { right: 0; }
+        
+        /* Sidebar visible state */
+        #sidebar.active { 
+            right: 0; 
+        }
+        
+        /* Close button styling */
         #sidebar .close-btn {
             float: right;
             cursor: pointer;
@@ -85,6 +151,8 @@
             font-weight: bold;
             color: #888;
         }
+        
+        /* Keyword tags styling in sidebar */
         #sidebar .keywords span {
             display: inline-block;
             background: #e0e0e0;
@@ -94,35 +162,50 @@
             font-size: 12px;
             color: #333;
         }
-        /* autocomplete suggestions */
+        
+        /* ========================================
+           AUTOCOMPLETE SUGGESTIONS
+           ======================================== */
+        
+        /* Dropdown container for search suggestions */
         .autocomplete-suggestions {
             border: 0px solid #ccc;
             background: white;
             position: absolute;
-            z-index: 2000;
+            z-index: 2000; /* Above all other elements */
             max-height: 150px;
-            overflow-y: auto;
+            overflow-y: auto; /* Scrollable if many results */
             width: 240px;
         }
+        
+        /* Individual suggestion item */
         .autocomplete-suggestion {
             padding: 6px;
             cursor: pointer;
         }
+        
+        /* Hover effect for suggestions */
         .autocomplete-suggestion:hover {
             background: #eee;
         }
 
-        /* Export Modal */
+        /* ========================================
+           MODAL STYLES (Export & Share)
+           ======================================== */
+        
+        /* Modal overlay covering entire screen */
         .modal {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed;
             z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0,0,0,0.4); /* Semi-transparent backdrop */
         }
+        
+        /* Modal content box centered on screen */
         .modal-content {
             background-color: #fefefe;
             margin: 15% auto;
@@ -131,6 +214,8 @@
             width: 300px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        
+        /* Modal close button (X) */
         .modal-close {
             color: #aaa;
             float: right;
@@ -138,7 +223,12 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .modal-close:hover { color: black; }
+        
+        .modal-close:hover { 
+            color: black; 
+        }
+        
+        /* Export format buttons in modal */
         .export-btn {
             display: block;
             width: 100%;
@@ -150,9 +240,16 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .export-btn:hover { background: #0056b3; }
+        
+        .export-btn:hover { 
+            background: #0056b3; 
+        }
 
-        /* Share Modal */
+        /* ========================================
+           SHARE MODAL SPECIFIC STYLES
+           ======================================== */
+        
+        /* URL input field in share modal */
         #shareUrl {
             width: 100%;
             padding: 8px;
@@ -161,6 +258,8 @@
             border-radius: 4px;
             font-size: 14px;
         }
+        
+        /* Copy to clipboard button */
         .copy-btn {
             background: #28a745;
             color: white;
@@ -169,9 +268,16 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .copy-btn:hover { background: #218838; }
+        
+        .copy-btn:hover { 
+            background: #218838; 
+        }
 
-        /* Notification */
+        /* ========================================
+           NOTIFICATION TOAST
+           ======================================== */
+        
+        /* Temporary notification popup in top-right corner */
         .notification {
             position: fixed;
             top: 20px;
@@ -180,13 +286,18 @@
             color: white;
             padding: 12px 20px;
             border-radius: 5px;
-            z-index: 3000;
-            display: none;
+            z-index: 3000; /* Above everything */
+            display: none; /* Hidden by default */
         }
     </style>
 </head>
 <body>
+<!-- ========================================
+     CONTROL PANEL
+     Filter and interaction controls
+     ======================================== -->
 <div id="controls">
+    <!-- Sentiment filter dropdown -->
     <label for="sentimentFilter">Filter by Sentiment:</label>
     <select id="sentimentFilter">
         <option value="all">All</option>
@@ -195,6 +306,7 @@
         <option value="negative">Negative</option>
     </select>
 
+    <!-- Category filter dropdown -->
     <label for="categoryFilter">Filter by Category:</label>
     <select id="categoryFilter">
         <option value="all">All</option>
@@ -204,46 +316,61 @@
         <option value="park">Park</option>
     </select>
 
-
+    <!-- Search box with autocomplete -->
     <label for="searchBox">Search Place:</label>
     <input type="text" id="searchBox" placeholder="Search place name..." />
     <div id="suggestions" class="autocomplete-suggestions"></div>
 
+    <!-- Minimum review count filter -->
     <label for="minReviews">Min Reviews:</label>
     <input type="number" id="minReviews" placeholder="1-5" min="1" max="5" />
 
+    <!-- Minimum user rating threshold filter -->
     <label for="minRating">Min Users Rated:</label>
     <input type="number" id="minRating" placeholder="e.g. 10" min="0" />
 
+    <!-- Keyword-based filter -->
     <label for="keywordFilter">Keyword Filter:</label>
     <input type="text" id="keywordFilter" placeholder="e.g. coffee" />
 
+    <!-- Primary action buttons -->
     <div class="btn-row">
       <button class="apply" onclick="applyFilters()">Apply</button>
       <button class="reset" onclick="resetFilters()">Reset</button>
       <button class="toggle-dark" onclick="toggleDarkMode()">🌙</button>
     </div>
 
+    <!-- Secondary action buttons -->
     <div class="btn-row">
       <button class="export" onclick="showExportModal()">📥 Export</button>
       <button class="share" onclick="showShareModal()">🔗 Share</button>
     </div>
 
     <hr>
+    
+    <!-- Heatmap layer toggles -->
     <label><input type="checkbox" id="heatmapPositive"> Positive Heatmap</label><br>
     <label><input type="checkbox" id="heatmapNeutral"> Neutral Heatmap</label><br>
     <label><input type="checkbox" id="heatmapNegative"> Negative Heatmap</label>
 </div>
 
+<!-- Map container where Leaflet will render -->
 <div id="map"></div>
 
+<!-- ========================================
+     SIDEBAR
+     Displays detailed place information
+     ======================================== -->
 <div id="sidebar">
     <span class="close-btn" onclick="closeSidebar()">✖</span>
     <h2>Place Details</h2>
     <p>Select a location on the map to see details here.</p>
 </div>
 
-<!-- Export Modal -->
+<!-- ========================================
+     EXPORT MODAL
+     Allows users to download filtered data
+     ======================================== -->
 <div id="exportModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeExportModal()">&times;</span>
@@ -255,7 +382,10 @@
     </div>
 </div>
 
-<!-- Share Modal -->
+<!-- ========================================
+     SHARE MODAL
+     Generates shareable URL with current filters
+     ======================================== -->
 <div id="shareModal" class="modal">
     <div class="modal-content">
         <span class="modal-close" onclick="closeShareModal()">&times;</span>
@@ -266,46 +396,82 @@
     </div>
 </div>
 
-<!-- Notification -->
+<!-- Notification toast for user feedback -->
 <div id="notification" class="notification"></div>
 
+<!-- ========================================
+     EXTERNAL JAVASCRIPT LIBRARIES
+     ======================================== -->
+<!-- Leaflet: Core mapping library -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Leaflet MarkerCluster: Groups nearby markers -->
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<!-- Leaflet Heat: Creates density heatmaps -->
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
 <script>
+/* ========================================
+   INITIALIZATION AND CONFIGURATION
+   ======================================== */
+
+// Default map view centered on Auckland, New Zealand
 const INITIAL_VIEW = { center: [-36.8485, 174.7633], zoom: 12 };
 
+// Define two tile layer options for light and dark themes
 var lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
 var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
+// Initialize map with light theme by default
 var map = L.map('map', { layers:[lightTiles] }).setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom);
 
-// Colors
+/* ========================================
+   UTILITY FUNCTIONS
+   ======================================== */
+
+/**
+ * Maps sentiment labels to color codes
+ * @param {string} sentiment - The sentiment label (positive/negative/neutral)
+ * @returns {string} Color code for the sentiment
+ */
 function getColor(sentiment) {
     if (sentiment === "positive") return "green";
     if (sentiment === "negative") return "red";
-    return "orange";
+    return "orange"; // Default for neutral
 }
 
-// Marker cluster
+/* ========================================
+   MARKER CLUSTERING SETUP
+   ======================================== */
+
+// Initialize marker cluster group to aggregate nearby markers
 var markerCluster = L.markerClusterGroup();
 map.addLayer(markerCluster);
 
-var allMarkers = [];
-var filteredMarkers = [];
-var heatPoints = { positive: [], neutral: [], negative: [] };
+// Global arrays to store marker data
+var allMarkers = []; // Complete dataset of all markers
+var filteredMarkers = []; // Currently filtered/visible markers
+var heatPoints = { positive: [], neutral: [], negative: [] }; // Data points for heatmaps
 
-// Sidebar
+/* ========================================
+   SIDEBAR FUNCTIONALITY
+   ======================================== */
+
+/**
+ * Updates sidebar content with place details
+ * @param {Object} props - Properties object containing place information
+ */
 function updateSidebar(props) {
+    // Determine sentiment color for display
     var sentimentColor = getColor(props.bert_label);
 
+    // Process keywords: convert comma-separated string to styled tags
     var keywordsHtml = "N/A";
     if (props.keywords) {
         var keywords = (""+props.keywords).split(",");
         keywordsHtml = keywords.map(k => `<span>${k.trim()}</span>`).join(" ");
     }
 
+    // Build sidebar HTML with place information
     var sidebar = document.getElementById("sidebar");
     sidebar.innerHTML = `
         <span class="close-btn" onclick="closeSidebar()">✖</span>
@@ -318,39 +484,67 @@ function updateSidebar(props) {
         <p><b>Top Keywords:</b></p>
         <div class="keywords">${keywordsHtml}</div>
     `;
+    // Show sidebar by adding active class
     sidebar.classList.add("active");
 }
+
+/**
+ * Closes the sidebar panel
+ */
 function closeSidebar() {
     document.getElementById("sidebar").classList.remove("active");
 }
+
+// Close sidebar when clicking anywhere on the map
 map.on("click", closeSidebar);
 
-// Heat layers
+/* ========================================
+   HEATMAP LAYER CONFIGURATION
+   ======================================== */
+
+// Define three heatmap layers for each sentiment category
 var heatLayers = {
+    // Positive sentiment: Green gradient
     positive: L.heatLayer([], {
-        radius: 30, blur: 15, maxZoom: 17,
+        radius: 30, 
+        blur: 15, 
+        maxZoom: 17,
         gradient: {0.2:'lime',0.4:'chartreuse',0.6:'yellowgreen',0.8:'green',1.0:'darkgreen'}
     }),
+    // Neutral sentiment: Yellow-orange gradient
     neutral: L.heatLayer([], {
-        radius: 30, blur: 15, maxZoom: 17,
+        radius: 30, 
+        blur: 15, 
+        maxZoom: 17,
         gradient: {0.2:'yellow',0.4:'gold',0.6:'orange',0.8:'darkorange',1.0:'orangered'}
     }),
+    // Negative sentiment: Pink-red gradient
     negative: L.heatLayer([], {
-        radius: 30, blur: 15, maxZoom: 17,
+        radius: 30, 
+        blur: 15, 
+        maxZoom: 17,
         gradient: {0.2:'pink',0.4:'deeppink',0.6:'red',0.8:'crimson',1.0:'darkred'}
     })
 };
 
-// Load GeoJSON
+/* ========================================
+   DATA LOADING AND MARKER CREATION
+   ======================================== */
+
+// Fetch and process GeoJSON data containing place information
 fetch('shops_sentiment.geojson')
     .then(res => res.json())
     .then(data => {
+        // Iterate through each place in the dataset
         data.features.forEach(function(f) {
+            // Extract coordinates from GeoJSON geometry
             var coords = f.geometry && f.geometry.coordinates;
-            if (!coords || coords.length < 2) return;
-            var lat = coords[1], lon = coords[0];
+            if (!coords || coords.length < 2) return; // Skip if invalid coordinates
+            
+            var lat = coords[1], lon = coords[0]; // GeoJSON uses [lng, lat] format
             var props = f.properties || {};
 
+            // Normalize property names (handle different naming conventions)
             props.place_name = props.place_name || props.name || props.place || '';
             props.sentiment_score = props.sentiment_score ?? props.bert_score ?? null;
             props.total_ratings = props.total_ratings || props.user_ratings_total || null;
@@ -358,75 +552,91 @@ fetch('shops_sentiment.geojson')
 
             var color = getColor(props.bert_label);
 
- // normalize category & sentiment
-var category = (props.category || '').toLowerCase().trim();
-var sentiment = (props.bert_label || '').toLowerCase().trim();
+            // Normalize category and sentiment for consistent processing
+            var category = (props.category || '').toLowerCase().trim();
+            var sentiment = (props.bert_label || '').toLowerCase().trim();
 
-// map category -> emoji
-var emojiMap = {
-  "restaurant": "🍴",
-  "shopping mall": "🛍️",
-  "tourist attraction": "📸",
-  "park": "🌳"
-};
-var emoji = emojiMap[category] || "📍";
+            // Map category types to emoji icons
+            var emojiMap = {
+              "restaurant": "🍴",
+              "shopping mall": "🛍️",
+              "tourist attraction": "📸",
+              "park": "🌳"
+            };
+            var emoji = emojiMap[category] || "📍"; // Default pin emoji
 
-// map sentiment -> background color (reuse your getColor if desired)
-var bg = (sentiment === "positive") ? "#2ecc71" : (sentiment === "negative") ? "#e74c3c" : "#f39c12";
+            // Determine background color based on sentiment
+            var bg = (sentiment === "positive") ? "#2ecc71" : 
+                     (sentiment === "negative") ? "#e74c3c" : "#f39c12";
 
-// create a small circular div icon with emoji and colored bg
-var html = '<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:'+bg+';box-shadow:0 1px 3px rgba(0,0,0,0.4);font-size:18px;">'+emoji+'</div>';
+            // Create custom HTML for marker icon: circular div with emoji and colored background
+            var html = '<div style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:'+bg+';box-shadow:0 1px 3px rgba(0,0,0,0.4);font-size:18px;">'+emoji+'</div>';
 
-var icon = L.divIcon({
-  className: 'category-div-icon', // keeps it namespaced
-  html: html,
-  iconSize: [34, 34],
-  iconAnchor: [17, 34],
-  popupAnchor: [0, -30]
-});
+            // Create Leaflet divIcon with custom HTML
+            var icon = L.divIcon({
+              className: 'category-div-icon',
+              html: html,
+              iconSize: [34, 34],
+              iconAnchor: [17, 34], // Anchor point at bottom center
+              popupAnchor: [0, -30] // Popup appears above marker
+            });
 
-var marker = L.marker([lat, lon], { icon: icon });
+            // Create marker with custom icon
+            var marker = L.marker([lat, lon], { icon: icon });
 
-
-
-            // bind popup for hover
+            // Bind popup for hover preview (place name and address)
             marker.bindPopup("<b>"+(props.place_name||'')+"</b><br>"+(props.address||''));
 
-            // hover events for popup
+            // Show popup on mouseover
             marker.on("mouseover", function(e) {
                 this.openPopup();
             });
+            
+            // Hide popup on mouseout
             marker.on("mouseout", function(e) {
                 this.closePopup();
             });
 
-            // click to open sidebar
+            // Open detailed sidebar on marker click
             marker.on("click", function(e) {
                 updateSidebar(props);
+                // Prevent click from propagating to map (which would close sidebar)
                 if (e && e.originalEvent) e.originalEvent.stopPropagation();
             });
 
+            // Add marker to cluster group
             markerCluster.addLayer(marker);
+            
+            // Store marker with its properties for filtering
             allMarkers.push({ marker: marker, props: props, feature: f });
 
+            // Add coordinates to appropriate heatmap array
             if (props.bert_label === "positive") heatPoints.positive.push([lat, lon, 0.7]);
             else if (props.bert_label === "neutral") heatPoints.neutral.push([lat, lon, 0.7]);
             else if (props.bert_label === "negative") heatPoints.negative.push([lat, lon, 0.7]);
         });
 
+        // Set heatmap data after all points are collected
         heatLayers.positive.setLatLngs(heatPoints.positive);
         heatLayers.neutral.setLatLngs(heatPoints.neutral);
         heatLayers.negative.setLatLngs(heatPoints.negative);
 
-        // Initialize filtered markers
+        // Initialize filtered markers with all markers
         filteredMarkers = [...allMarkers];
         
-        // Load from URL parameters if present
+        // Load and apply filters from URL parameters if present
         loadFromUrl();
     });
 
-// Filters
+/* ========================================
+   FILTERING FUNCTIONALITY
+   ======================================== */
+
+/**
+ * Applies all active filters to markers and updates map display
+ */
 function applyFilters() {
+    // Get current filter values from form inputs
     var sentimentValue = document.getElementById("sentimentFilter").value;
     var categoryValue = document.getElementById("categoryFilter").value;
     var searchValue = (document.getElementById("searchBox").value || "").toLowerCase();
@@ -434,9 +644,11 @@ function applyFilters() {
     var minRating = parseFloat(document.getElementById("minRating").value) || 0;
     var keywordValue = (document.getElementById("keywordFilter").value || "").toLowerCase();
 
+    // Clear current markers from cluster
     markerCluster.clearLayers();
     filteredMarkers = [];
     
+    // Iterate through all markers and check against filter criteria
     allMarkers.forEach(function(item) {
         var p = item.props || {};
         var placeName = (p.place_name || "").toLowerCase();
@@ -444,6 +656,7 @@ function applyFilters() {
         var reviewCount = Number(p.review_count) || 0;
         var ratingCount = Number(p.total_ratings) || 0;
 
+        // Check each filter criterion (uses logical AND - all must match)
         var matchSentiment = (sentimentValue === "all" || (p.bert_label === sentimentValue));
         var matchCategory = (categoryValue === "all" || (p.category && p.category.toLowerCase() === categoryValue));
         var matchSearch = (!searchValue || placeName.includes(searchValue));
@@ -451,101 +664,166 @@ function applyFilters() {
         var matchRating = (ratingCount >= minRating);
         var matchKeyword = (!keywordValue || topKeywords.includes(keywordValue));
 
+        // If all criteria match, add marker to filtered set
         if (matchSentiment && matchCategory && matchSearch && matchReviews && matchRating && matchKeyword) {
             markerCluster.addLayer(item.marker);
             filteredMarkers.push(item);
         }
     });
     
+    // Update URL to reflect current filters
     updateUrl();
 }
 
+/**
+ * Resets all filters to default state and shows all markers
+ */
 function resetFilters() {
+    // Reset all filter input values
     document.getElementById("sentimentFilter").value = "all";
     document.getElementById("searchBox").value = "";
     document.getElementById("minReviews").value = "";
     document.getElementById("minRating").value = "";
     document.getElementById("keywordFilter").value = "";
 
+    // Uncheck all heatmap toggles
     ['heatmapPositive','heatmapNeutral','heatmapNegative'].forEach(id => {
-        var el = document.getElementById(id); if (el) el.checked = false;
+        var el = document.getElementById(id); 
+        if (el) el.checked = false;
     });
-    Object.keys(heatLayers).forEach(k => { if (map.hasLayer(heatLayers[k])) map.removeLayer(heatLayers[k]); });
+    
+    // Remove all heatmap layers from map
+    Object.keys(heatLayers).forEach(k => { 
+        if (map.hasLayer(heatLayers[k])) map.removeLayer(heatLayers[k]); 
+    });
 
+    // Clear and re-add all markers
     markerCluster.clearLayers();
     allMarkers.forEach(item => markerCluster.addLayer(item.marker));
     filteredMarkers = [...allMarkers];
+    
+    // Close sidebar and reset map view
     closeSidebar();
     map.setView(INITIAL_VIEW.center, INITIAL_VIEW.zoom);
     
-    // Clear URL parameters
+    // Clear URL parameters (remove query string)
     window.history.replaceState({}, document.title, window.location.pathname);
 }
 
-// Heatmap toggles
+/* ========================================
+   HEATMAP TOGGLE HANDLERS
+   ======================================== */
+
+// Toggle positive sentiment heatmap on/off
 document.getElementById("heatmapPositive").addEventListener("change", e => {
-    if (e.target.checked) map.addLayer(heatLayers.positive); else map.removeLayer(heatLayers.positive);
-    updateUrl();
+    if (e.target.checked) map.addLayer(heatLayers.positive); 
+    else map.removeLayer(heatLayers.positive);
+    updateUrl(); // Save state to URL
 });
+
+// Toggle neutral sentiment heatmap on/off
 document.getElementById("heatmapNeutral").addEventListener("change", e => {
-    if (e.target.checked) map.addLayer(heatLayers.neutral); else map.removeLayer(heatLayers.neutral);
-    updateUrl();
-});
-document.getElementById("heatmapNegative").addEventListener("change", e => {
-    if (e.target.checked) map.addLayer(heatLayers.negative); else map.removeLayer(heatLayers.negative);
+    if (e.target.checked) map.addLayer(heatLayers.neutral); 
+    else map.removeLayer(heatLayers.neutral);
     updateUrl();
 });
 
-// Dark mode toggle
-var darkMode = false;
+// Toggle negative sentiment heatmap on/off
+document.getElementById("heatmapNegative").addEventListener("change", e => {
+    if (e.target.checked) map.addLayer(heatLayers.negative); 
+    else map.removeLayer(heatLayers.negative);
+    updateUrl();
+});
+
+/* ========================================
+   DARK MODE FUNCTIONALITY
+   ======================================== */
+
+var darkMode = false; // Track current theme state
+
+/**
+ * Toggles between light and dark map themes
+ */
 function toggleDarkMode() {
     darkMode = !darkMode;
     if (darkMode) {
-        map.removeLayer(lightTiles); darkTiles.addTo(map);
+        // Switch to dark theme
+        map.removeLayer(lightTiles); 
+        darkTiles.addTo(map);
         document.getElementById("controls").classList.add("dark");
     } else {
-        map.removeLayer(darkTiles); lightTiles.addTo(map);
+        // Switch to light theme
+        map.removeLayer(darkTiles); 
+        lightTiles.addTo(map);
         document.getElementById("controls").classList.remove("dark");
     }
-    updateUrl();
+    updateUrl(); // Save theme preference to URL
 }
 
-// Autocomplete
+/* ========================================
+   AUTOCOMPLETE SEARCH FUNCTIONALITY
+   ======================================== */
+
+// Real-time search with autocomplete suggestions
 document.getElementById("searchBox").addEventListener("input", function() {
     var input = this.value.toLowerCase();
     var suggestionBox = document.getElementById("suggestions");
-    suggestionBox.innerHTML = "";
-    if (!input) return;
-    var matches = allMarkers.filter(item => (item.props.place_name||"").toLowerCase().includes(input));
+    suggestionBox.innerHTML = ""; // Clear previous suggestions
+    
+    if (!input) return; // Don't show suggestions if input is empty
+    
+    // Find matching place names (case-insensitive partial match)
+    var matches = allMarkers.filter(item => 
+        (item.props.place_name||"").toLowerCase().includes(input)
+    );
+    
+    // Display top 5 matches
     matches.slice(0,5).forEach(m => {
         var div = document.createElement("div");
         div.className = "autocomplete-suggestion";
         div.textContent = m.props.place_name;
+        
+        // Click handler for suggestion selection
         div.onclick = () => {
             document.getElementById("searchBox").value = m.props.place_name;
-            suggestionBox.innerHTML = "";
-            map.setView(m.marker.getLatLng(), 16);
-            updateSidebar(m.props);
+            suggestionBox.innerHTML = ""; // Clear suggestions
+            map.setView(m.marker.getLatLng(), 16); // Zoom to location
+            updateSidebar(m.props); // Show details in sidebar
         };
         suggestionBox.appendChild(div);
     });
 });
 
-// Export functionality
+/* ========================================
+   EXPORT FUNCTIONALITY
+   ======================================== */
+
+/**
+ * Shows the export modal dialog
+ */
 function showExportModal() {
     document.getElementById("exportModal").style.display = "block";
 }
 
+/**
+ * Closes the export modal dialog
+ */
 function closeExportModal() {
     document.getElementById("exportModal").style.display = "none";
 }
 
+/**
+ * Exports filtered markers in specified format
+ * @param {string} format - Export format: 'csv' or 'geojson'
+ */
 function exportData(format) {
+    // Check if there's data to export
     if (filteredMarkers.length === 0) {
         showNotification("No data to export. Apply filters first.", "error");
         return;
     }
 
+    // Call appropriate export function based on format
     if (format === 'csv') {
         exportCSV();
     } else if (format === 'geojson') {
@@ -556,13 +834,20 @@ function exportData(format) {
     showNotification(`Exported ${filteredMarkers.length} places as ${format.toUpperCase()}`);
 }
 
+/**
+ * Exports filtered markers as CSV file
+ */
 function exportCSV() {
+    // Define CSV column headers
     var headers = ['place_name', 'address', 'bert_label', 'sentiment_score', 'total_ratings', 'review_count', 'keywords', 'latitude', 'longitude'];
-    var csvContent = headers.join(',') + '\n';
+    var csvContent = headers.join(',') + '\n'; // Create header row
     
+    // Iterate through filtered markers and create CSV rows
     filteredMarkers.forEach(item => {
         var props = item.props;
-        var coords = item.marker.getLatLng();
+        var coords = item.marker.getLatLng(); // Get marker coordinates
+        
+        // Create row with quoted text fields to handle commas in content
         var row = [
             `"${props.place_name || ''}"`,
             `"${props.address || ''}"`,
@@ -577,64 +862,99 @@ function exportCSV() {
         csvContent += row.join(',') + '\n';
     });
     
+    // Trigger file download
     downloadFile(csvContent, 'sentiment_places.csv', 'text/csv');
 }
 
+/**
+ * Exports filtered markers as GeoJSON file
+ */
 function exportGeoJSON() {
+    // Collect feature objects from filtered markers
     var features = filteredMarkers.map(item => item.feature);
+    
+    // Create valid GeoJSON FeatureCollection structure
     var geojson = {
         type: "FeatureCollection",
         features: features
     };
     
+    // Convert to formatted JSON string
     var content = JSON.stringify(geojson, null, 2);
     downloadFile(content, 'sentiment_places.geojson', 'application/geo+json');
 }
 
+/**
+ * Creates and triggers download of a file
+ * @param {string} content - File content as string
+ * @param {string} filename - Name for downloaded file
+ * @param {string} mimeType - MIME type of the file
+ */
 function downloadFile(content, filename, mimeType) {
+    // Create blob from content
     var blob = new Blob([content], { type: mimeType });
+    
+    // Create temporary download link
     var url = window.URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
     a.download = filename;
+    
+    // Trigger download by simulating click
     document.body.appendChild(a);
     a.click();
+    
+    // Clean up: revoke object URL and remove link element
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 }
 
-// Share functionality
+/* ========================================
+   SHARE FUNCTIONALITY
+   ======================================== */
+
+/**
+ * Shows share modal with generated URL
+ */
 function showShareModal() {
     var shareUrl = generateShareUrl();
     document.getElementById("shareUrl").value = shareUrl;
     document.getElementById("shareModal").style.display = "block";
 }
 
+/**
+ * Closes the share modal dialog
+ */
 function closeShareModal() {
     document.getElementById("shareModal").style.display = "none";
 }
 
+/**
+ * Generates shareable URL with current application state
+ * Encodes filters, map position, and settings in URL parameters
+ * @returns {string} Complete shareable URL
+ */
 function generateShareUrl() {
     var params = new URLSearchParams();
     
-    // Get current filter values
+    // Collect current filter values
     var sentiment = document.getElementById("sentimentFilter").value;
     var search = document.getElementById("searchBox").value;
     var minReviews = document.getElementById("minReviews").value;
     var minRating = document.getElementById("minRating").value;
     var keyword = document.getElementById("keywordFilter").value;
     
-    // Get map view
+    // Get current map view state
     var center = map.getCenter();
     var zoom = map.getZoom();
     
-    // Get heatmap states
+    // Check which heatmap layers are active
     var heatmaps = [];
     if (document.getElementById("heatmapPositive").checked) heatmaps.push('positive');
     if (document.getElementById("heatmapNeutral").checked) heatmaps.push('neutral');
     if (document.getElementById("heatmapNegative").checked) heatmaps.push('negative');
     
-    // Add parameters
+    // Add parameters only if they differ from defaults (keeps URL clean)
     if (sentiment !== 'all') params.set('sentiment', sentiment);
     if (search) params.set('search', search);
     if (minReviews) params.set('minReviews', minReviews);
@@ -643,29 +963,44 @@ function generateShareUrl() {
     if (heatmaps.length > 0) params.set('heatmaps', heatmaps.join(','));
     if (darkMode) params.set('dark', '1');
     
+    // Always include map position for exact view recreation
     params.set('lat', center.lat.toFixed(6));
     params.set('lng', center.lng.toFixed(6));
     params.set('zoom', zoom);
     
+    // Construct complete URL with query parameters
     return window.location.origin + window.location.pathname + '?' + params.toString();
 }
 
+/**
+ * Updates browser URL to reflect current application state
+ * Uses replaceState to avoid cluttering browser history
+ */
 function updateUrl() {
     var shareUrl = generateShareUrl();
     window.history.replaceState({}, document.title, shareUrl);
 }
 
+/**
+ * Loads and applies application state from URL parameters
+ * Called on page load to restore shared/bookmarked views
+ */
 function loadFromUrl() {
     var params = new URLSearchParams(window.location.search);
     
-    // Set filter values
-    if (params.get('sentiment')) document.getElementById('sentimentFilter').value = params.get('sentiment');
-    if (params.get('search')) document.getElementById('searchBox').value = params.get('search');
-    if (params.get('minReviews')) document.getElementById('minReviews').value = params.get('minReviews');
-    if (params.get('minRating')) document.getElementById('minRating').value = params.get('minRating');
-    if (params.get('keyword')) document.getElementById('keywordFilter').value = params.get('keyword');
+    // Restore filter values from URL parameters
+    if (params.get('sentiment')) 
+        document.getElementById('sentimentFilter').value = params.get('sentiment');
+    if (params.get('search')) 
+        document.getElementById('searchBox').value = params.get('search');
+    if (params.get('minReviews')) 
+        document.getElementById('minReviews').value = params.get('minReviews');
+    if (params.get('minRating')) 
+        document.getElementById('minRating').value = params.get('minRating');
+    if (params.get('keyword')) 
+        document.getElementById('keywordFilter').value = params.get('keyword');
     
-    // Set map view
+    // Restore map view position and zoom level
     var lat = params.get('lat');
     var lng = params.get('lng');
     var zoom = params.get('zoom');
@@ -673,80 +1008,116 @@ function loadFromUrl() {
         map.setView([parseFloat(lat), parseFloat(lng)], parseInt(zoom));
     }
     
-    // Set heatmaps
+    // Restore active heatmap layers
     var heatmaps = params.get('heatmaps');
     if (heatmaps) {
         heatmaps.split(',').forEach(h => {
+            // Capitalize first letter to match checkbox ID format
             var checkbox = document.getElementById('heatmap' + h.charAt(0).toUpperCase() + h.slice(1));
             if (checkbox) {
                 checkbox.checked = true;
+                // Trigger change event to actually show the heatmap
                 checkbox.dispatchEvent(new Event('change'));
             }
         });
     }
     
-    // Set dark mode
+    // Restore dark mode if it was enabled
     if (params.get('dark') === '1') {
         toggleDarkMode();
     }
     
-    // Apply filters if any were set
+    // Apply filters if any were set in URL
     if (params.toString()) {
         applyFilters();
     }
 }
 
+/**
+ * Copies share URL to clipboard
+ */
 function copyShareUrl() {
     var shareUrl = document.getElementById("shareUrl");
-    shareUrl.select();
-    shareUrl.setSelectionRange(0, 99999);
+    shareUrl.select(); // Select text in input field
+    shareUrl.setSelectionRange(0, 99999); // For mobile devices
     
     try {
+        // Attempt to copy to clipboard (older method, widely supported)
         document.execCommand('copy');
         showNotification("Share link copied to clipboard!");
         closeShareModal();
     } catch (err) {
+        // Show error if copy fails
         showNotification("Failed to copy link", "error");
     }
 }
 
-// Notification system
+/* ========================================
+   NOTIFICATION SYSTEM
+   ======================================== */
+
+/**
+ * Displays temporary notification toast message
+ * @param {string} message - Message text to display
+ * @param {string} type - Notification type: 'success' or 'error'
+ */
 function showNotification(message, type = 'success') {
     var notification = document.getElementById('notification');
     notification.textContent = message;
     notification.className = 'notification';
+    
+    // Set background color based on notification type
     if (type === 'error') {
-        notification.style.background = '#dc3545';
+        notification.style.background = '#dc3545'; // Red for errors
     } else {
-        notification.style.background = '#28a745';
+        notification.style.background = '#28a745'; // Green for success
     }
+    
     notification.style.display = 'block';
     
+    // Auto-hide notification after 3 seconds
     setTimeout(() => {
         notification.style.display = 'none';
     }, 3000);
 }
 
-// Close modals when clicking outside
+/* ========================================
+   MODAL CLICK-OUTSIDE-TO-CLOSE HANDLER
+   ======================================== */
+
+/**
+ * Closes modals when user clicks outside the modal content
+ */
 window.onclick = function(event) {
     var exportModal = document.getElementById("exportModal");
     var shareModal = document.getElementById("shareModal");
+    
+    // Check if click target is the modal backdrop (not content)
     if (event.target == exportModal) exportModal.style.display = "none";
     if (event.target == shareModal) shareModal.style.display = "none";
 }
 
-// Legend
+/* ========================================
+   MAP LEGEND
+   ======================================== */
+
+// Create legend control positioned in bottom-right corner
 var legend = L.control({ position: "bottomright" });
+
+/**
+ * Builds legend HTML content
+ * Shows sentiment colors and category emoji symbols
+ */
 legend.onAdd = function(map) {
     var div = L.DomUtil.create("div", "legend");
 
-    // Sentiment colors
+    // Sentiment color legend section
     div.innerHTML += "<b>Sentiment</b><br>";
     div.innerHTML += "<i style='background: green'></i> Positive<br>";
     div.innerHTML += "<i style='background: orange'></i> Neutral<br>";
     div.innerHTML += "<i style='background: red'></i> Negative<br><hr>";
 
-    // Category symbols (match your marker system)
+    // Category emoji legend section (matches marker system)
     div.innerHTML += "<b>Category</b><br>";
     div.innerHTML += "🍴 Restaurant<br>";
     div.innerHTML += "🛍️ Shopping Mall<br>";
@@ -756,6 +1127,7 @@ legend.onAdd = function(map) {
     return div;
 };
 
+// Add legend to map
 legend.addTo(map);
 </script>
 </body>
