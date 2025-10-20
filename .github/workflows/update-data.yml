@@ -1,16 +1,15 @@
-name: Update data (sentiment)
+name: Update sentiment (no notebook changes)
 
 on:
   schedule:
-    - cron: "0 14 * * *"   
+    - cron: "0 14 * * *"    
   workflow_dispatch: {}
 
 jobs:
-  run-notebook:
+  run:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     env:
       
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: List repo (debug)
+      - name: Debug tree
         run: |
           pwd
           ls -R
@@ -31,38 +30,45 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install deps (runner-side, not in notebook)
         run: |
           python -m pip install --upgrade pip
           pip install papermill jupyter nbconvert nbclient ipykernel \
                       pandas numpy python-dotenv requests \
                       vaderSentiment nltk openpyxl
 
-      - name: Register kernel for papermill
+      - name: Register kernel so papermill can find it
         run: |
           python -m ipykernel install --user --name python3
 
-      - name: Download NLTK resources (VADER)
+      - name: Pre-fetch NLTK VADER (if notebook uses it)
         run: |
           python - << 'PY'
           import nltk
-          nltk.download('vader_lexicon', quiet=True)
+          try:
+            nltk.download('vader_lexicon', quiet=True)
+          except Exception:
+            pass
           PY
 
-      - name: Run data collection notebook (optional)
-        if: ${{ hashFiles('data/final/data_collection_final.ipynb') != '' }}
-        run: |
-          papermill --log-output -k python3 \
-            "data/final/data_collection_final.ipynb" \
-            "data/final/_out_data_collection.ipynb"
+      
 
-      - name: Run sentiment notebook
+      - name: Create .env where the notebook expects it
+        working-directory: data/final
         run: |
-          papermill --log-output -k python3 \
-            "data/final/Sent.ipynb" \
-            "data/final/_out_sent.ipynb"
+          # Write BOTH names in case the notebook loads either
+          echo "GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" > .env
+          echo "GOOGLE_API_KEY=${GOOGLE_API_KEY}" >> .env
+          # Show (redacted) proof
+          awk -F= '{print $1"=<set>"}' .env
 
-      - name: Show outputs (debug)
+      - name: Run Sent.ipynb from its native folder
+        working-directory: data/final
+        run: |
+          # Use the notebook's own relative paths by running IN that folder
+          papermill --log-output -k python3 "Sent.ipynb" "_out_sent.ipynb"
+
+      - name: Show outputs
         run: |
           ls -lh data/final
 
@@ -74,6 +80,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "auto: refresh data $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git commit -m "auto: refresh sentiment $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git push
           fi
