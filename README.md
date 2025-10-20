@@ -198,8 +198,6 @@ The source code, GeoJSON dataset, and related documentation are hosted on the Gi
 
 The application runs directly in a web browser with no installation required. It has been tested and optimized for **Google Chrome**, **Mozilla Firefox**, and **Microsoft Edge** on both desktop and laptop environments.
 
-> *(Insert Figure 9: Screenshot of homepage interface showing control panel and map view.)*
-
 ---
 
 ## 🗺️ Interface Overview
@@ -219,8 +217,6 @@ The main components of the interface include:
 - **Dark/Light Mode Button (🌙)** – Allows switching between light and dark themes for accessibility and user comfort.
 
 The interface is fully responsive and dynamically adjusts to different screen sizes and browser window dimensions.
-
-> *(Insert Figure 10: Annotated layout showing map, controls, and sidebar.)*
 
 ---
 
@@ -264,8 +260,6 @@ These filters can be used independently or in combination.
    Text input filter based on aspect keywords (e.g., “coffee”, “service”).  
    > The map updates to show places whose extracted keywords include the input term.
 
-> *(Insert Figure 11: Screenshot demonstrating filter panel and filtered map.)*
-
 Once filters are applied, press **Apply** to update the map instantly.  
 **Reset** clears all filters and restores the default view.  
 
@@ -289,8 +283,6 @@ When a marker is clicked:
 > Sentiment: **Positive (0.83)**  
 > Keywords: *coffee, service, breakfast, friendly staff*
 
-> *(Insert Figure 12: Sidebar example displaying place details and keywords.)*
-
 ---
 
 ## 🌡️ Heatmap Visualization
@@ -306,8 +298,6 @@ Each can be toggled independently. These heatmaps aggregate sentiment intensitie
 - Negative = shades of **red and pink**  
 
 Users can overlay multiple heatmaps simultaneously to compare sentiment zones.
-
-> *(Insert Figure 13: Example showing positive vs. negative heatmap overlays.)*
 
 ---
 
@@ -333,8 +323,6 @@ Exports include **only the currently visible (filtered) features**, enabling tar
 
 The **Share (🔗)** button generates a sharable URL containing all current filter states and map coordinates.  
 Copying and sending this link allows others to load the same filtered view — ideal for collaboration or presentations.
-
-> *(Insert Figure 14: Export modal and share link demonstration.)*
 
 ---
 
