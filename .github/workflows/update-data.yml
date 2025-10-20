@@ -67,26 +67,30 @@ jobs:
 
       # NEW: pure-bash seeding so asserts in the notebook pass
       - name: Prepare processed fallbacks from frozen data
+        working-directory: data/final
         run: |
-          set -e
-          mkdir -p data/processed
+         set -e
+         mkdir -p data/processed
 
-          if [ -f "data/final/places.csv" ]; then
-            cp -f "data/final/places.csv" "data/processed/auckland_places_basic.csv"
-            cp -f "data/final/places.csv" "data/processed/auckland_places_details.csv"
-            echo "Seeded places -> processed/basic & processed/details"
-          else
-            echo "data/final/places.csv not found; cannot seed processed place files"
-          fi
+         if [ -f "places.csv" ]; then
+         cp -f "places.csv" "data/processed/auckland_places_basic.csv"
+         cp -f "places.csv" "data/processed/auckland_places_details.csv"
+         echo "Seeded places -> data/processed/{auckland_places_basic.csv, auckland_places_details.csv}"
+         else
+         echo "places.csv not found in data/final; cannot seed processed place files"
+         fi
 
-          if [ -f "data/final/reviews.csv" ]; then
-            cp -f "data/final/reviews.csv" "data/processed/auckland_reviews.csv"
-            echo "Seeded reviews -> processed/reviews"
-          else
-            echo "data/final/reviews.csv not found; cannot seed processed review file"
-          fi
+         if [ -f "reviews.csv" ]; then
+         cp -f "reviews.csv" "data/processed/auckland_reviews.csv"
+         echo "Seeded reviews -> data/processed/auckland_reviews.csv"
+         else
+         echo "reviews.csv not found in data/final; cannot seed processed review file"
+         fi
 
-          ls -lh data/processed || true
+         echo "Tree under data/final:"
+         ls -lh .
+         echo "Tree under data/final/data/processed:"
+         ls -lh data/processed || true
 
       - name: Run notebook (Data collection)
         working-directory: data/final
