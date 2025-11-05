@@ -191,10 +191,10 @@ This section functions as a practical user manual for end-users, researchers, an
 ## 🚀 Accessing the Application
 
 The application is publicly accessible at:  
-🔗 **[https://arjunnkk.github.io/place-sentiment-map](https://arjunnkk.github.io/place-sentiment-map)**
+🔗 **[https://arjunnkk.github.io/place-sentiment-map.](https://arjunnkk.github.io/place-sentiment-map.)**
 
 The source code, GeoJSON dataset, and related documentation are hosted on the GitHub repository:  
-🔗 **[https://github.com/arjunnkk/place-sentiment-map](https://github.com/arjunnkk/place-sentiment-map)**
+🔗 **[https://github.com/arjunnkk/place-sentiment-map.](https://github.com/arjunnkk/place-sentiment-map.)**
 
 The application runs directly in a web browser with no installation required. It has been tested and optimized for **Google Chrome**, **Mozilla Firefox**, and **Microsoft Edge** on both desktop and laptop environments.
 
@@ -347,7 +347,7 @@ Both files are open-source and available in the GitHub repository.
 The visualization is hosted via **GitHub Pages**:
 
 **🔗 Live Map:**  
-[https://arjunnkk.github.io/place-sentiment-map/](https://arjunnkk.github.io/place-sentiment-map/)
+[https://arjunnkk.github.io/place-sentiment-map./](https://arjunnkk.github.io/place-sentiment-map./)
 
 ## 📈 Future Enhancements
 
